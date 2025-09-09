@@ -119,3 +119,101 @@ export async function generateFoodImages(prompt, { aspectRatio = '1:1', numberOf
   return data;
 }
 
+/**
+ * Load saved chat messages for the given email.
+ */
+export async function getUserChats(email, conversationId) {
+  const url = new URL('/api/chats', window.location.origin);
+  if (email) url.searchParams.set('email', email);
+  if (conversationId) url.searchParams.set('conversationId', conversationId);
+  const res = await fetch(url.toString(), { method: 'GET' });
+  let payload;
+  try { payload = await res.json(); } catch {}
+  if (!res.ok) {
+    const detail = payload?.error || payload?.detail || `HTTP ${res.status}`;
+    throw new Error(`Failed to load chats: ${detail}`);
+  }
+  return payload;
+}
+
+/**
+ * Append new messages to the user's chat history.
+ */
+export async function saveUserChats(messages, email, conversationId, titleHint) {
+  const res = await fetch('/api/chats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, email, conversationId, titleHint }),
+  });
+  let payload;
+  try { payload = await res.json(); } catch {}
+  if (!res.ok) {
+    const detail = payload?.error || payload?.detail || `HTTP ${res.status}`;
+    throw new Error(`Failed to save chats: ${detail}`);
+  }
+  return payload;
+}
+
+export async function listConversations(email) {
+  const url = new URL('/api/conversations', window.location.origin);
+  if (email) url.searchParams.set('email', email);
+  const res = await fetch(url.toString(), { method: 'GET' });
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error || 'Failed to list conversations');
+  return payload;
+}
+
+export async function createConversation(email, title) {
+  const res = await fetch('/api/conversations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, title }),
+  });
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error || 'Failed to create conversation');
+  return payload;
+}
+
+export async function deleteConversation(email, conversationId) {
+  const url = new URL('/api/conversations', window.location.origin);
+  if (email) url.searchParams.set('email', email);
+  if (conversationId) url.searchParams.set('conversationId', conversationId);
+  const res = await fetch(url.toString(), { method: 'DELETE' });
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error || 'Failed to delete conversation');
+  return payload;
+}
+
+// Friends API helpers
+export async function requestFriend(fromEmail, toEmail) {
+  const res = await fetch('/api/friends/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromEmail, toEmail }) });
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error || 'Failed to send request');
+  return payload;
+}
+
+export async function acceptFriend(email, fromEmail) {
+  const res = await fetch('/api/friends/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, fromEmail }) });
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error || 'Failed to accept request');
+  return payload;
+}
+
+export async function listFriends(email) {
+  const url = new URL('/api/friends/list', window.location.origin);
+  url.searchParams.set('email', email);
+  const res = await fetch(url.toString());
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error || 'Failed to list friends');
+  return payload;
+}
+
+export async function listPending(email) {
+  const url = new URL('/api/friends/pending', window.location.origin);
+  url.searchParams.set('email', email);
+  const res = await fetch(url.toString());
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error || 'Failed to list pending');
+  return payload;
+}
+
