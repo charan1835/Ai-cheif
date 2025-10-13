@@ -15,3 +15,4 @@ export async function GET() {
 		return new Response(JSON.stringify({ error: 'Unexpected error', detail: String(e) }), { status: 500 });
 	}
 }
+

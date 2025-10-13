@@ -7,14 +7,18 @@ import { getDb } from '../../../_utils/mongodb';
 // Creates a pending friend request from fromEmail to toEmail.
 export async function POST(request) {
   try {
-    const { fromEmail, toEmail } = await request.json();
+    let { fromEmail, toEmail } = await request.json();
+
+    // Normalize
+    fromEmail = typeof fromEmail === 'string' ? fromEmail.trim().toLowerCase() : '';
+    toEmail = typeof toEmail === 'string' ? toEmail.trim().toLowerCase() : '';
 
     // Basic validations
     if (!fromEmail || !toEmail) {
       return new Response(JSON.stringify({ error: 'fromEmail and toEmail are required' }), { status: 400 });
     }
     if (fromEmail === toEmail) {
-      return new Response(JSON.stringify({ error: 'Cannot friend yourself' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Cannot friend yourself' }), { status: 409 });
     }
 
     const db = await getDb();
@@ -36,7 +40,7 @@ export async function POST(request) {
     // Check blocks (simple one-way block check)
     const target = await users.findOne({ email: toEmail }, { projection: { blocked: 1, friends: 1, pendingRequests: 1 } });
     if (target?.blocked?.includes(fromEmail)) {
-      return new Response(JSON.stringify({ error: 'You are blocked by this user' }), { status: 403 });
+      return new Response(JSON.stringify({ error: 'Recipient has blocked requests from you' }), { status: 403 });
     }
 
     // Prevent duplicates: if already friends or already pending
