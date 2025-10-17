@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import { getFoodItems, getTypesByItemSlug } from '../_utils/GlobalApi'
+import { getFoodItems, getTypesByItemSlug } from '../_utils/hygraph-service'
 
 export default function Fooditems({ onSelectItem }) {
   const [items, setItems] = useState([])

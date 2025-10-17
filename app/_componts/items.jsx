@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from "react"
-import { getAllTypes, getTypesByItemSlug } from "../_utils/GlobalApi"
+import { getAllTypes, getTypesByItemSlug } from "../_utils/hygraph-service"
 
 export default function Items({ itemSlug }) {
   const [types, setTypes] = useState([])

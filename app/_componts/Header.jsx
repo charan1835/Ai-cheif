@@ -13,9 +13,9 @@ const UserButton = dynamic(() => import("@clerk/nextjs").then(mod => mod.UserBut
 const navLinks = [
   { name: "Home", href: "/" },
   { name: "AI Chef", href: "/ai-chef" },
-  { name: "Upload", href: "/upload" },
-  { name: "My Bookings", href: "/mybookings" },
-  { name: "About", href: "/about" },
+  { name: "Upload", href: "/yettocode" },
+  { name: "My Bookings", href: "/yettocode" },
+  { name: "About", href: "/yettocode" },
   { name: "Connect", href: "/connect" },
 ];
 

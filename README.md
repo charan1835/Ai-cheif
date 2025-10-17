@@ -44,7 +44,7 @@ Set environment variables in `.env.local`:
 MONGODB_URI="your mongodb+srv://..."
 MONGODB_DB="foodrecipe" # optional, defaults to foodrecipe
 GEMINI_API_KEY="your-google-generative-language-api-key"
-NEXT_PUBLIC_BACKEND_API_URL="https://your-hygraph-endpoint" # if used
+NEXT_PUBLIC_HYGRAPH_API_URL="https://your-hygraph-endpoint"
 NEXT_PUBLIC_HYGRAPH_TOKEN="..." # if required
 ```
 

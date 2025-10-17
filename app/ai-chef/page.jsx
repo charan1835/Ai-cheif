@@ -134,6 +134,21 @@ export default function AIChefPage() {
           const data = await listConversations(email)
           setConversations(Array.isArray(data?.conversations) ? data.conversations : [])
         } catch {}
+
+        // If it was a new chat, generate and set the title
+        if (!activeConversationId) {
+          try {
+            const titleRes = await fetch('/api/conversations/generate-title', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ conversationId: convId, firstMessage: trimmed }),
+            });
+            if (titleRes.ok) {
+              const { title } = await titleRes.json();
+              setConversations(prev => prev.map(c => String(c._id) === convId ? { ...c, title } : c));
+            }
+          } catch (e) { console.error("Failed to generate title:", e) }
+        }
       }
 
       const res = await generateRecipe(trimmed)
@@ -269,5 +284,3 @@ export default function AIChefPage() {
     </div>
   )
 }
-
-

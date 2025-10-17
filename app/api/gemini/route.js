@@ -10,7 +10,7 @@ export async function POST(request) {
       return new Response(JSON.stringify({ error: 'Server misconfigured: missing GEMINI_API_KEY' }), { status: 500 });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const instruction = [
       // AI Chef Identity & Language
       'You are an expert AI Chef assistant specializing in Indian cuisine. You provide comprehensive, step-by-step recipe guidance.',
@@ -103,5 +103,3 @@ export async function POST(request) {
     return new Response(JSON.stringify({ error: 'Unexpected error', detail: String(e) }), { status: 500 });
   }
 }
-
-

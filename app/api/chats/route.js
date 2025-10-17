@@ -16,17 +16,28 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
-    const conversationId = searchParams.get('conversationId');
+    const conversationId = searchParams.get('convId');
     if (!email || typeof email !== 'string') {
-      return new Response(JSON.stringify({ error: 'Missing email' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing or invalid email' }), { status: 400 });
     }
     if (!conversationId) {
       return new Response(JSON.stringify({ error: 'Missing conversationId' }), { status: 400 });
     }
 
     const db = await getDb();
-    const doc = await db.collection('chats').findOne({ email, conversationId: new ObjectId(conversationId) });
-    const messages = doc?.messages || [];
+    // Ensure indexes for faster queries
+    await db.collection('messages').createIndex({ conversationId: 1, createdAt: 1 });
+    await db.collection('conversations').createIndex({ email: 1, updatedAt: -1 });
+
+    // Verify user has access to this conversation
+    const conversation = await db.collection('conversations').findOne({ _id: new ObjectId(conversationId), email });
+    if (!conversation) {
+      return new Response(JSON.stringify({ error: 'Conversation not found or access denied' }), { status: 404 });
+    }
+
+    // Fetch messages for the conversation, sorted by creation time
+    const messages = await db.collection('messages').find({ conversationId: new ObjectId(conversationId) }).sort({ createdAt: 1 }).toArray();
+
     return new Response(JSON.stringify({ messages }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e) {
     return new Response(JSON.stringify({ error: 'Unexpected error', detail: String(e) }), { status: 500 });
@@ -48,14 +59,21 @@ export async function POST(request) {
     const db = await getDb();
     const convId = await ensureConversation(db, email, conversationId, titleHint);
 
-    await db.collection('chats').updateOne(
-      { email, conversationId: convId },
-      { $setOnInsert: { email, conversationId: convId, createdAt: new Date() }, $push: { messages: { $each: messages } }, $set: { updatedAt: new Date() } },
-      { upsert: true }
-    );
+    const now = new Date();
+    // Prepare messages to be inserted as individual documents
+    const messagesToInsert = messages.map(msg => ({
+      ...msg,
+      conversationId: convId,
+      email, // Associate message with the user for potential future access control
+      createdAt: now,
+      updatedAt: now,
+    }));
 
-    await db.collection('conversations').updateOne({ _id: convId }, { $set: { updatedAt: new Date() }, $setOnInsert: { createdAt: new Date(), email } });
+    if (messagesToInsert.length > 0) {
+      await db.collection('messages').insertMany(messagesToInsert);
+    }
 
+    await db.collection('conversations').updateOne({ _id: convId }, { $set: { updatedAt: now }, $setOnInsert: { createdAt: now, email } });
     return new Response(JSON.stringify({ ok: true, conversationId: String(convId) }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e) {
     return new Response(JSON.stringify({ error: 'Unexpected error', detail: String(e) }), { status: 500 });

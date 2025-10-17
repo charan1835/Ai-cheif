@@ -43,9 +43,8 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
-    const conversationId = searchParams.get('conversationId');
+    const body = await request.json();
+    const { email, conversationId } = body || {};``
     if (!email || !conversationId) {
       return new Response(JSON.stringify({ error: 'Missing email or conversationId' }), { status: 400 });
     }
